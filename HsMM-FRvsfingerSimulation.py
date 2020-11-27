@@ -23,26 +23,6 @@ time_length = trajectory_data[0].shape[0]
 # so we set the status as all 1 (not missing)
 status = txt.miss_pattern_gen(8, [1, 1, 1, 1, 1, 1, 1, 1], time_length, seed_num=10)
 
-para_hmm = {'state_num': 12, 'anchor_num': 8, 'initial_p': np.ones(12) / 12,
-            'transition_p': np.array([[.6, .4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                      [.25, .5, .25, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                      [0, .2, .4, .2, 0, 0, .2, 0, 0, 0, 0, 0],
-                                      [0, 0, .25, .5, .25, 0, 0, 0, 0, 0, 0, 0],
-                                      [0, 0, 0, .25, .5, .25, 0, 0, 0, 0, 0, 0],
-                                      [0, 0, 0, 0, 0.25, .5, 0, .25, 0, 0, 0, 0],
-                                      [0, 0, .05, 0, 0, 0, .6, .2, .1, 0, 0, 0.05],
-                                      [0, 0, 0, 0, 0, 0.25, .25, .5, 0, 0, 0, 0],
-                                      [0, 0, 0, 0, 0, 0, .25, 0, .5, .25, 0, 0],
-                                      [0, 0, 0, 0, 0, 0, 0, 0, .4, .6, 0, 0],
-                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .6, .4],
-                                      [0, 0, 0, 0, 0, 0, .25, 0, 0, 0, .25, .5]]),
-            'training_type': 'not_provided', 'likelihood_from': 'not_provided'}  # for training data and evaluation data
-hmm = HiddenMarkov(para_hmm)
-mean_u, cov_u = hmm.training(t_type='list', train_data=trained_data)
-hmm.set_gaussian(mean_u, cov_u)
-# compute the likelihood (emission probability in the HsMM)
-likelihood_value = hmm.get_likelihood(trajectory_data[0], status)
-
 D = 50  # predefine the maximum possible duration time
 BBD_para = np.array([[.43, 5, D], [.35, 4.21, D], [.21, 2.25, D], [.46, 10, D], [.65, 8.88, D], [.53, 2.72, D],
                      [2, 3, D], [1, 40, D], [0.50, 5.53, D], [.65, 7.78, D], [.43, 6.49, D], [.43, 7.36, D]])
@@ -60,12 +40,16 @@ para_hsmm = {'state_num': 12, 'anchor_num': 8, 'initial_p': np.ones(12) / 12,
                                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
                                        [0, 0, 0, 0, 0, 0, .53, 0, 0, 0, .47, 0]]),
-             'training_type': 'from_external', 'likelihood_from': 'from_external',
-             'mean': mean_u, 'cov': cov_u, 'likelihood': likelihood_value,
+             'training_type': 'not_provided', 'likelihood_from': 'not_provided',
              'max_duration': D,
              'sojourn': {'type': ['BBD' for item in range(12)], 'parameter': BBD_para}}
 
 hsmm = HiddenSemiMarkov(para_hsmm)
+mean_u, cov_u = hsmm.training(t_type='list', train_data=trained_data)
+hsmm.set_gaussian(mean_u, cov_u)
+# compute the likelihood (emission probability in the HsMM)
+likelihood_value = hsmm.get_likelihood(trajectory_data[0], status)
+hsmm.set_likelihood(likelihood_value)
 
 start_time = time.time()
 st_forward_hsmm = hsmm.forward_only_relax()[0]
