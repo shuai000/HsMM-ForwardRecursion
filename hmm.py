@@ -333,9 +333,11 @@ class HiddenMarkov:
             likelihood[:] = 1 / self.Ns
         return likelihood
 
-    def get_likelihood(self, data, status):
+    def get_likelihood(self, data, status=None):
 
         likelihood = np.zeros((data.shape[0], self.Ns))
+        if status is None:
+            status = np.ones((data.shape[0], self.Na))
 
         for i_time in range(data.shape[0]):
             tempstatus = np.where(status[i_time, :] == 1)[0]

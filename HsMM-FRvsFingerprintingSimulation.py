@@ -1,27 +1,23 @@
 """
 1. Applied for the HsMM forward recursion algorithm
-2. 08/09/2020 Shuai Sun
-This is an illustrative example of how HMM works to localization user region.
+2. Author: Shuai Sun, 08/09/2020
+This is an illustrative example of how HMM works to localization a mobile phone user.
 """
 
 from txtparse import TxtManager
-from hmm import HiddenMarkov, HiddenSemiMarkov
+from hmm import HiddenSemiMarkov
 import numpy as np
-from demo import hmm_hsmm_comp
+from plot_function import hmm_hsmm_comp
 import matplotlib.pyplot as plt
 import time
 
 txt = TxtManager()
-training_path = 'Data\_training'
-trajecotry_path = 'Data\_testing'
+training_path = 'Data/_training'
+trajectory_path = 'Data/_testing'
 # extract the training and testing data, the RSS data is generated from a ray-tracing software
 trained_data = txt.wirelessinsite_path(training_path, s_num=12, offset=9, ap_num=8)
-trajectory_data = txt.wirelessinsite_path(trajecotry_path, s_num=1, offset=1, ap_num=8)
+trajectory_data = txt.wirelessinsite_path(trajectory_path, s_num=1, offset=1, ap_num=8)
 time_length = trajectory_data[0].shape[0]
-
-# the status was used to simulate data missing problem, it is not required here
-# so we set the status as all 1 (not missing)
-status = txt.miss_pattern_gen(8, [1, 1, 1, 1, 1, 1, 1, 1], time_length, seed_num=10)
 
 D = 50  # predefine the maximum possible duration time
 BBD_para = np.array([[.43, 5, D], [.35, 4.21, D], [.21, 2.25, D], [.46, 10, D], [.65, 8.88, D], [.53, 2.72, D],
@@ -48,7 +44,7 @@ hsmm = HiddenSemiMarkov(para_hsmm)
 mean_u, cov_u = hsmm.training(t_type='list', train_data=trained_data)
 hsmm.set_gaussian(mean_u, cov_u)
 # compute the likelihood (emission probability in the HsMM)
-likelihood_value = hsmm.get_likelihood(trajectory_data[0], status)
+likelihood_value = hsmm.get_likelihood(trajectory_data[0])
 hsmm.set_likelihood(likelihood_value)
 
 start_time = time.time()
