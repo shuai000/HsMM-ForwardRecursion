@@ -1,7 +1,6 @@
 import numpy as np
 import os
 from scipy.stats import bernoulli
-import pickle
 
 
 class TxtManager:
@@ -13,51 +12,6 @@ class TxtManager:
 
     def __init__(self, filename=[]):
         self.filename = filename
-
-    def txtname_set(self, filename):
-        self.filename = filename
-
-    def line_parse(self, lines):
-        """
-        To parse a single reading of the Bluetooth piconet data
-        :param lines: single line as a input
-        :return: data, status indicating if the anchor gets measurement update,
-                glitch_indication: 0-(normal), 1-(glitch) 2-(blank lines)
-                blank lines are artificially created when I save the data in matlab
-        """
-        segment_line = lines.split()  # by default it is separated by space
-        status_position = 0
-        auth = 0  # initialized as 0 each time
-        data = []
-        extracted_status = []
-        count = 0
-        for item in segment_line:
-            status_position += 1  # the postion of update status, after Auth it will be the status
-            if item == 'Auth':
-                auth = 1
-                break
-        if auth:
-            for item in lines:  # loop through the data one by one
-                count += 1
-                if item == '{':
-                    item_from = count
-                if item == '}':
-                    item_to = count - 1
-                    break
-            glitch_indicator = 0
-            data = list(map(float, lines[item_from:item_to].split()))
-            # parse the status
-            for i in segment_line[status_position]:
-                if i == 'X' or i == 'L':
-                    extracted_status.append(1)
-                else:
-                    extracted_status.append(0)
-        else:
-            if lines == '\n':
-                glitch_indicator = 2
-            else:
-                glitch_indicator = 1
-        return data, extracted_status, glitch_indicator
 
     def wirelessinsite_path(self, pathname, s_num, offset=1, ap_num=5):
         """
