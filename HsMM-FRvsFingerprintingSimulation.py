@@ -4,7 +4,7 @@
 This is an illustrative example of how HMM works to localization a mobile phone user.
 """
 
-from txtparse import TxtManager
+from p2mfile_parse import TxtManager
 from hmm import HiddenSemiMarkov
 import numpy as np
 from plot_function import hmm_hsmm_comp

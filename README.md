@@ -6,13 +6,15 @@ Author
 
 ## Description
 
-This code is developed as an illustrative example for the simulation section
+This code is developed as an illustrative example for the simulation of applying
+the HsMM-FR algorithm for indoor user region localization
 
 ## Dataset specifications
 
-The dataset consists a training and testing folder with received signal strength (RSS) data collected
+The dataset consists a training and testing folder with received signal strength (RSS) data, obtained
+from a ray-tracing software (Wireless Insite)
 
-There are 8 anchor nodes and 12 regions (see Figure 4 in the paper)
+There are K=8 anchor nodes and N=12 regions 
 
 - In the folder _training, it contains 8 * 12 = 96 separate .p2m files, each file
 corresponds to a RSS data collected from a grid number of user locations (coordinate 

@@ -1,6 +1,9 @@
 import numpy as np
 import os
 from scipy.stats import bernoulli
+"""
+The functions here are used to parse the .p2m RSS data file and extract the corresponding RSS data
+"""
 
 
 class TxtManager:
