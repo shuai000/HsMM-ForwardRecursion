@@ -1,11 +1,11 @@
 """
-1. Hidden Markov Based Module -- Include HMM and HsMM inherited from HMM
-2. Ref: Lawrence tutorial on HMM & selected application in speech recognition
-3. Author: Shuai Sun    05/09/2018
+1. Hidden Markov Module -- Include HMM and HsMM inherited from HMM
+2. Refs: a) Lawrence: tutorial on HMM & selected application in speech recognition
+         b) Shun-Zheng Yu & Hisashi Kobayashi: A hidden semi-Markov model with missing data
+         and multiple observation sequences for mobility tracking.
+3. Author: Shuai Sun, Code originally developed at 05/09/2018
 -----------------------------------------------------------------------------
 Parameter needs to be specified once a HMM/HsMM model instance is initialized
-
-
 """
 import numpy as np
 import scipy.io as sio
@@ -392,8 +392,8 @@ class HiddenSemiMarkov(HiddenMarkov):
 
     def forward_only_relax(self):
         """
-        This is the original implementation of the HsMM-FR algorithm, scaling is not added
-        See forward_only_relax_scaling for the practical implementation
+        This is reserved for HsMM forward recursion with scaling
+        It corresponds to Equations (12-16) in the HsMM-FR paper.
         :return: st (state estimates), bar_alpha (forward variable)
         """
         like_value = self.likelihood
@@ -415,7 +415,7 @@ class HiddenSemiMarkov(HiddenMarkov):
     def forward_only_relax_scaling(self):
         """
         For practical implementation of the HsMM-FR algorithm
-        The bar_alpha is defined as state i is active not ends
+        bar_alpha_t(i) is defined as state i is active at t (either ends at t or continues after t)
         see Equations (17-21) in the paper
         :return: st (state estimates), bar_alpha (scaled forward variable), ct (scaling coefficient)
         """
@@ -446,7 +446,6 @@ class HiddenSemiMarkov(HiddenMarkov):
     def forward_process(self, p_type='none', interval_index=None, prior=None):
         """
         func: rewrited to conduct forward process in hidden Semi-Markov model
-        :param filename: txt file that contains the data
         :param p_type: define the propagation type
         :param interval_index: evaluation interval
         :param prior: prior information for the forward propagation, if None, uniform is assumed
