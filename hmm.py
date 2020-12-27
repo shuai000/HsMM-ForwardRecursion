@@ -112,82 +112,6 @@ class HiddenMarkov:
         print("-------- HIDDEN MARKOV MODEL ---------\n")
 
     @staticmethod
-    def state_format_conversion(input_para, c_type, state_num=None, return_type='separate'):
-        """
-        Function: Convert two different types of state sequence format
-                  format 1: state and duration tuple
-                  format 2: continuous state index along the timeline
-        :param input_para: list type, length changes according to c_type
-        :param c_type: 'forward': 1 -> 2   'backward': 2 -> 1, 'backpack': 2->1, [[2, 5, 6...(s1)], [3, 19...(s2], ]
-                                                                         : applied for histogram
-        :param return_type: applied for backback direction,
-                            'separate' state and duration (format 1), 'together' [[state, its duration],[], ...]
-        :return: list type, in contrast with input
-        """
-        if c_type == 'forward':
-            assert len(input_para) == 2, 'Input para format wrong!'
-            state = input_para[0]
-            duration = input_para[1]
-            seq = np.zeros(sum(duration), dtype=int)
-            for i in range(sum(duration)):
-                sum_d = duration[0]
-                k = 0
-                while i >= sum_d:
-                    k += 1
-                    sum_d = sum_d + duration[k]
-                seq[i] = state[k]
-            return seq
-        elif c_type == 'backward':
-            # assert np.array(input_para).ndim == 1, "Input para format wrong!"
-            state = []
-            duration = []
-            # state append right at the state changes, duration append after the state finishes
-            state.append(input_para[0])
-            counter = 1
-            for i in range(1, len(input_para)):
-                if input_para[i] != input_para[i - 1]:  # a state change occurs
-                    duration.append(counter)
-                    state.append(input_para[i])
-                    counter = 1  # reset the counter
-                else:  # remains the previous state
-                    counter += 1
-            duration.append(counter)  # append the counter for the final state
-            if return_type == 'separate':
-                return state, duration
-            elif return_type == 'together':
-                state_duration = []
-                for i in range(len(state)):
-                    state_duration.append([state[i], sum(duration[0:i + 1])])
-                return state_duration
-            else:
-                raise Exception('The return type is not correct: separate or together!')
-        elif c_type == 'backpack':
-            # the state index should be started from zero
-            state = []
-            duration = []
-            # state append right at the state changes, duration append after the state finishes
-            state.append(input_para[0])
-            counter = 1
-            for i in range(1, len(input_para)):
-                if input_para[i] != input_para[i - 1]:  # a state change occurs
-                    duration.append(counter)
-                    state.append(input_para[i])
-                    counter = 1  # reset the counter
-                else:  # remains the previous state
-                    counter += 1
-            duration.append(counter)  # append the counter for the final state
-
-            assert len(state) == len(duration), 'The size of state and duration are not consistent!'
-            assert state_num is not None, 'State number must be provided!'
-            # classify the duration time data
-            duration_val = [[] for i in range(state_num)]   # duration quantized from the estimated sequence
-            for i in range(len(state)):
-                duration_val[state[i]].append(duration[i])  # indicates the first state indexed as zero
-            return duration_val
-        else:  # raise an error
-            raise Exception('The conversion type is wrongly typed, forward, backward and backpack ONLY!')
-
-    @staticmethod
     def match_error(st_truth, st_est, state_num, c_type='absolute'):
         """
         Function: statistically compute the matching error with different user-defined criteria
@@ -226,7 +150,6 @@ class HiddenMarkov:
                 error_matching[st_truth[i] - 1, st_est[i] - 1] += 1
 
         return correct_record, error_matching
-
 
     def forward_process(self, p_type='none', interval_index=None, prior=None):
         """
@@ -456,24 +379,25 @@ class HiddenSemiMarkov(HiddenMarkov):
             print("State {} ".format(i + 1), para['sojourn']['type'][i],
                   "with parameter: {}".format(para['sojourn']['parameter'][i]))
         if para['training_type'] == 'not_provided':
-            print("Training data is not specified initially, provided later!")
+            print("Training data is not provided when initializing the model!")
         else:
             print("Training data is from: {}".format(para['training_type']))
 
         if para['likelihood_from'] == 'not_provided':
-            print("Likelihood data is not specified initially, provided later!")
+            print("Likelihood data is not provided when initializing the model!")
         else:
             print("Likelihood is from: {}".format(para['likelihood_from']))
 
         print("-------- HIDDEN Semi-Markov MODEL ---------\n\n")
 
-    def forward_only_relax(self, propagation_type='none'):
+    def forward_only_relax(self):
         """
-        For estimation, where the bar_alpha is defined as state i is active not ends
-        :return:
+        This is the original implementation of the HsMM-FR algorithm, scaling is not added
+        See forward_only_relax_scaling for the practical implementation
+        :return: st (state estimates), bar_alpha (forward variable)
         """
         like_value = self.likelihood
-        alpha, alpha_star = self.forward_process(p_type=propagation_type)[0:2]
+        alpha, alpha_star = self.forward_process(p_type='none')[0:2]
         bar_alpha = np.zeros(alpha.shape)
         for i_time in range(alpha.shape[0]):
             if i_time == 0:
@@ -482,17 +406,50 @@ class HiddenSemiMarkov(HiddenMarkov):
             else:
                 for i in range(self.Ns):
                     for d in range(min(i_time + 1, self.D)):
-                        like_d = self.combined_like(like_value, i_time, d)
+                        like_d = self.combined_likelihood(like_value, i_time, d)
                         bar_alpha[i_time, i] += alpha_star[i_time - d, i] * sum(self.Pd[i, d:self.D]) * like_d[i]
 
         st = self.state_estimation(bar_alpha)
         return st, bar_alpha
+
+    def forward_only_relax_scaling(self):
+        """
+        For practical implementation of the HsMM-FR algorithm
+        The bar_alpha is defined as state i is active not ends
+        see Equations (17-21) in the paper
+        :return: st (state estimates), bar_alpha (scaled forward variable), ct (scaling coefficient)
+        """
+        like_value = self.likelihood
+        alpha = np.zeros(like_value.shape)
+        alpha_star = np.zeros(like_value.shape)
+        bar_alpha = np.zeros(like_value.shape)
+
+        ct = np.ones(like_value.shape[0])
+        # initialization
+        alpha_star[0, :] = self.Pi
+        alpha[0, :], ct[0] = self.forward_semi_propagation(alpha_star, like_value, 0,
+                                                               p_type='scale', scaling_coefficent=ct)
+        bar_alpha[0, :] = self.forward_semi_propagation_relax(alpha_star, like_value, 0, ct)
+
+        for i_time in range(1, like_value.shape[0]):
+            # step 1: prediction
+            alpha_star[i_time, :] = self.forward_propagation(alpha[i_time - 1, :])
+            # step 2: update
+            alpha[i_time, :], ct[i_time] = self.forward_semi_propagation(alpha_star, like_value, i_time,
+                                                                         p_type='scale', scaling_coefficent=ct)
+            bar_alpha[i_time, :] = self.forward_semi_propagation_relax(alpha_star, like_value, i_time, ct)
+
+        st = self.state_estimation(bar_alpha)
+
+        return st, bar_alpha, ct
 
     def forward_process(self, p_type='none', interval_index=None, prior=None):
         """
         func: rewrited to conduct forward process in hidden Semi-Markov model
         :param filename: txt file that contains the data
         :param p_type: define the propagation type
+        :param interval_index: evaluation interval
+        :param prior: prior information for the forward propagation, if None, uniform is assumed
         :return:
         """
         if interval_index is None:
@@ -519,22 +476,6 @@ class HiddenSemiMarkov(HiddenMarkov):
             st = self.state_estimation(alpha)
             return alpha, alpha_star, st, likelihood
 
-        elif p_type == 'logform':  # alpha = log[p(o_1:t, s_i ends at t)]
-            for i_time in range(like_value.shape[0]):
-                if i_time == 0:  # initialization
-                    alpha_star[i_time, :] = np.log(self.Pi)
-                    alpha[i_time, :] = self.forward_semi_propagation(alpha_star, like_value, i_time, p_type='log')
-                else:
-                    # step 1 : prediction
-                    alpha_star[i_time, :] = self.forward_propagation(alpha[i_time - 1, :], p_type='log')
-                    # step 2: update
-                    alpha[i_time, :] = self.forward_semi_propagation(alpha_star, like_value, i_time, p_type='log')
-            likelihood = 0
-            for item in alpha[-1, :]:
-                likelihood = likelihood + exp(item)
-            likelihood = log(likelihood)
-            st = self.state_estimation(alpha)
-            return alpha, alpha_star, st, likelihood
         elif p_type == 'posterior':
             ct = np.ones(like_value.shape[0])
             # initialization
@@ -545,6 +486,7 @@ class HiddenSemiMarkov(HiddenMarkov):
 
             alpha[0, :], ct[0] = self.forward_semi_propagation(alpha_star, like_value, 0,
                                                                p_type='scale', scaling_coefficent=ct)
+
             for i_time in range(1, like_value.shape[0]):
                 # step 1: prediction
                 alpha_star[i_time, :] = self.forward_propagation(alpha[i_time - 1, :])
@@ -554,6 +496,27 @@ class HiddenSemiMarkov(HiddenMarkov):
             # likelihood = -1 * self.hmm_log(ct.prod())
             st = self.state_estimation(alpha)
             return alpha, alpha_star, st, ct
+
+    def forward_semi_propagation_relax(self, alpha_star, like_value, i_time, scaling_coefficient):
+        """
+        func: Recursively compute "active" forward variable -- alpha
+        :param alpha_star: sub forward variable
+        :param like_value: likelihood matrix (needs to be reevaluated)
+        :param i_time: current time instance
+        :param scaling_coefficient: scaling factors array
+        """
+        alpha = np.zeros(self.Ns)
+        d_max = min(self.D, i_time + 1)
+
+        for i in range(self.Ns):
+            for d in range(d_max):
+                like_d = self.combined_likelihood(like_value, i_time, d)
+                scaling = 1
+                for k in range(d):
+                    scaling = scaling * scaling_coefficient[i_time - 1 - k]
+                alpha[i] = alpha[i] + alpha_star[i_time - d, i] * sum(self.Pd[i, d:self.D]) * like_d[i] * scaling
+        alpha = alpha * scaling_coefficient[i_time]
+        return alpha
 
     def forward_semi_propagation(self, alpha_star, like_value, i_time, p_type='none', scaling_coefficent=[]):
         """
@@ -569,21 +532,13 @@ class HiddenSemiMarkov(HiddenMarkov):
         if p_type == 'none':
             for i in range(self.Ns):
                 for d in range(d_max):
-                    like_d = self.combined_like(like_value, i_time, d)
+                    like_d = self.combined_likelihood(like_value, i_time, d)
                     alpha[i] = alpha[i] + alpha_star[i_time - d, i] * self.Pd[i, d] * like_d[i]
-            return alpha
-        elif p_type == 'log':
-            for i in range(self.Ns):
-                for d in range(d_max):
-                    like_d = self.combined_like(like_value, i_time, d)
-                    alpha[i] = alpha[i] + exp(
-                        alpha_star[i_time - d, i] + np.log(self.Pd[i, d]) + np.log(like_d[i]))
-                alpha[i] = log(alpha[i])  # logsumexp_d()
             return alpha
         elif p_type == 'scale':
             for i in range(self.Ns):
                 for d in range(d_max):
-                    like_d = self.combined_like(like_value, i_time, d)
+                    like_d = self.combined_likelihood(like_value, i_time, d)
                     scaling = 1
                     for k in range(d):
                         scaling = scaling * scaling_coefficent[i_time - 1 - k]
@@ -592,7 +547,8 @@ class HiddenSemiMarkov(HiddenMarkov):
             alpha = alpha * ct
             return alpha, ct
 
-    def combined_like(self, like_value, t, d, norm_indicator=0):
+    @staticmethod
+    def combined_likelihood(like_value, t, d, norm_indicator=0):
         """
         To compute b_j(O_{t-d+1:t}) by assuming conditional independence
         :param like_value: likelihood matrix

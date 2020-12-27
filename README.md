@@ -60,4 +60,15 @@ Data
 │   │   ...
 │   │   ...
 │   │  	HsMM_Experiment_power.t001_08.r020.p2m
+```
+
+## Cite
+
+@data{r9n4-xz17-20,
+doi = {10.21227/r9n4-xz17},
+url = {https://dx.doi.org/10.21227/r9n4-xz17},
+author = {Shuai Sun },
+publisher = {IEEE Dataport},
+title = {Indoor Received Signal Strength Data generated from ray-tracing},
+year = {2020} }
 

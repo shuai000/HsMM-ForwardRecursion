@@ -40,7 +40,7 @@ para_hsmm = {'state_num': 12, 'anchor_num': 8, 'initial_p': np.ones(12) / 12,
              'max_duration': D,
              'sojourn': {'type': ['BBD' for item in range(12)], 'parameter': BBD_para}}
 
-hsmm = HiddenSemiMarkov(para_hsmm)
+hsmm = HiddenSemiMarkov(para_hsmm, specification=True)
 mean_u, cov_u = hsmm.training(t_type='list', train_data=trained_data)
 hsmm.set_gaussian(mean_u, cov_u)
 # compute the likelihood (emission probability in the HsMM)
@@ -48,10 +48,9 @@ likelihood_value = hsmm.get_likelihood(trajectory_data[0])
 hsmm.set_likelihood(likelihood_value)
 
 start_time = time.time()
-st_forward_hsmm = hsmm.forward_only_relax()[0]
+st_forward_hsmm = hsmm.forward_only_relax_scaling()[0]
 end_time = time.time()
-
-print("forward_hsmm time:", (end_time - start_time) / time_length)
+print("forward_hsmm running time:", (end_time - start_time) / time_length)
 
 st_max_likelihood = hsmm.maximum_likelihood(likelihood_value)
 
