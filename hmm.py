@@ -441,12 +441,13 @@ class HiddenSemiMarkov(HiddenMarkov):
 
         st = self.state_estimation(bar_alpha)
 
-        return st, bar_alpha, ct
+        return st, bar_alpha, alpha, ct
 
     def forward_process(self, p_type='none', interval_index=None, prior=None):
         """
         func: rewrited to conduct forward process in hidden Semi-Markov model
-        :param p_type: define the propagation type
+        :param p_type: define if the scaling is required, since the scaling scheme naturally lead to a posterior
+                       distribution, we term it as 'posterior'
         :param interval_index: evaluation interval
         :param prior: prior information for the forward propagation, if None, uniform is assumed
         :return:
@@ -523,6 +524,7 @@ class HiddenSemiMarkov(HiddenMarkov):
         :param alpha_star: sub forward variable
         :param like_value: likelihood matrix (needs to be reevaluated)
         :param i_time: current time instance
+        :param p_type: determine if scaling is applied (scale) or not (none)
         :return:
         """
         alpha = np.zeros(self.Ns)

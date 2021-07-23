@@ -3,7 +3,8 @@
 2. Corresponding paper: HsMM-based forward recursion algorithm for
 real-time indoor localization
 3. This is an illustrative example of how HMM works to localization a mobile phone user.
-3. Author: Shuai Sun, 08/09/2020
+4. Author: Shuai Sun, 08/09/2020
+5. Please report problems and bugs to sunshuai198903@163.com
 """
 
 from p2mfile_parse import TxtManager
@@ -22,10 +23,10 @@ trajectory_data = txt.wirelessinsite_path(trajectory_path, s_num=1, offset=1, ap
 time_length = trajectory_data[0].shape[0]
 
 D = 50  # predefine the maximum possible duration time
-# BBD_para refers to paras for the state duration distribution, using a pre-trained beta-binomial distribution
-# For a simple illustration, we haven't included the corresponding code for HsMM model training using Baum-Welch
+# Note: BBD_para refers to paras for the state duration distribution, using a pre-trained beta-binomial distribution
+# For the sake of illustration, we haven't included the corresponding code for HsMM model training using Baum-Welch
 # The HsMM model training code will be released soon, together with a letter paper of using BBD for duration modelling.
-# In the same sense, the trained state transition probability is also directly provided for now
+# The trained state transition probability is also directly provided for now.
 BBD_para = np.array([[.43, 5, D], [.35, 4.21, D], [.21, 2.25, D], [.46, 10, D], [.65, 8.88, D], [.53, 2.72, D],
                      [2, 3, D], [1, 40, D], [0.50, 5.53, D], [.65, 7.78, D], [.43, 6.49, D], [.43, 7.36, D]])
 
@@ -57,6 +58,10 @@ start_time = time.time()
 st_forward_hsmm = hsmm.forward_only_relax_scaling()[0]
 end_time = time.time()
 print("forward_hsmm running time:", (end_time - start_time) / time_length)
+
+# -- To Evaluate the effect of scaling regarding to practical implementation, use the following two commands
+# alpha_nonscaled = hsmm.forward_only_relax_scaling()[2]
+# alpha_scaled = hsmm.forward_process()[0]
 
 st_max_likelihood = hsmm.maximum_likelihood(likelihood_value)
 

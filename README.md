@@ -2,7 +2,7 @@
 # (Development Python Code)
 
 Author
-- Shuai Sun  (shuai.sun@student.rmit.edu.au,  sunshuai198903@163.com)
+- Shuai Sun  (shuai.sun@dlmu.edu.cn,  sunshuai198903@163.com)
 
 ## Description
 
