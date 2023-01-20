@@ -59,7 +59,7 @@ st_forward_hsmm = hsmm.forward_only_relax_scaling()[0]
 end_time = time.time()
 print("forward_hsmm running time:", (end_time - start_time) / time_length)
 
-# -- To Evaluate the effect of scaling regarding to practical implementation, use the following two commands
+# -- To Evaluate the effect of scaling regarding practical implementation, use the following two commands
 # alpha_nonscaled = hsmm.forward_only_relax_scaling()[2]
 # alpha_scaled = hsmm.forward_process()[0]
 

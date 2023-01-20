@@ -14,7 +14,8 @@ the HsMM-FR algorithm for indoor user region localization
 The dataset consists a training and testing folder with received signal strength (RSS) data, obtained
 from a ray-tracing software (Wireless Insite)
 
-There are K=8 anchor nodes and N=12 regions 
+There are K=8 anchor nodes and N=12 regions, see FigureSimu
+Note that this is slightly different from the figure used in the paper
 
 - In the folder _training, it contains 8 * 12 = 96 separate .p2m files, each file
 corresponds to a RSS data collected from a grid number of user locations (coordinate 
@@ -60,15 +61,25 @@ Data
 │   │   ...
 │   │   ...
 │   │  	HsMM_Experiment_power.t001_08.r020.p2m
-```
+
+
+## Real Data Demo
+The space is segmented into 21 uniform cells.
+The black square shows the current true location of the user.
+The rea shaded color indicates HsMM-FR estimation results.
+The intensity of the red color scales according to its probability. If there are several cells being shaded,
+it indicates that there is a disagreement among cells (ambiguity occures).
+
 
 ## Cite
 
-@data{r9n4-xz17-20,
-doi = {10.21227/r9n4-xz17},
-url = {https://dx.doi.org/10.21227/r9n4-xz17},
-author = {Shuai Sun },
-publisher = {IEEE Dataport},
-title = {Indoor Received Signal Strength Data generated from ray-tracing},
-year = {2020} }
+@ARTICLE{HsMM-FR2023,
+  author={Sun, Shuai and Li, Yan and Wang, Xuezhi and Moran, Bill and Rowe, Wayne S.T.},
+  journal={IEEE Sensors Journal}, 
+  title={Exploiting environmental information using HsMMs for smartphone user tracking}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/JSEN.2023.3236642}}
 
