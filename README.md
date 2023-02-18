@@ -78,8 +78,7 @@ it indicates that there is a disagreement among cells (ambiguity occures).
   journal={IEEE Sensors Journal}, 
   title={Exploiting environmental information using HsMMs for smartphone user tracking}, 
   year={2023},
-  volume={},
-  number={},
-  pages={1-1},
-  doi={10.1109/JSEN.2023.3236642}}
-
+  volume={23},
+  number={4},
+  pages={4043-4051},
+  doi={10.1109/JSEN.2023.3236642}
